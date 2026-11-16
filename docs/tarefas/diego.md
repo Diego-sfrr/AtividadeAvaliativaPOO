@@ -27,5 +27,5 @@ Arquivos: `database/02a_functions_views_triggers.sql`, `database/SGA_completo.sq
 ## S4 · Slides e relatório (até 20/11)
 - [x] Meus slides: `apresentacao/diego_functions_views_triggers.pptx`
 - [ ] Juntar os slides de todos
-- [ ] Explicação de functions, views e triggers no relatório
-- [ ] Meu parágrafo em "Dificuldades e Soluções"
+- [x] Explicação de functions, views e triggers no relatório (`relatorio/functions_views_triggers.md`)
+- [x] Meu parágrafo em "Dificuldades e Soluções" (seção 5 do mesmo arquivo)
