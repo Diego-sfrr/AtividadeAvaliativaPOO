@@ -25,6 +25,7 @@ Arquivos: `database/02a_functions_views_triggers.sql`, `database/SGA_completo.sq
 - [ ] Rodar o `SGA_completo.sql` do zero no Workbench, com a integração de todos
 
 ## S4 · Slides e relatório (até 20/11)
-- [ ] Modelo dos slides em `apresentacao/` e juntar as partes de todos
+- [x] Meus slides: `apresentacao/diego_functions_views_triggers.pptx`
+- [ ] Juntar os slides de todos
 - [ ] Explicação de functions, views e triggers no relatório
 - [ ] Meu parágrafo em "Dificuldades e Soluções"
