@@ -124,7 +124,7 @@ Os quatro ficam na tabela `matricula`.
 
 ### `trg_valida_vagas` (BEFORE INSERT) — RN05
 
-Conta os matriculados da turma e, se já forem iguais ao número de vagas, cancela o `INSERT` com `SIGNAL SQLSTATE '45000'` e a mensagem "Turma lotada: a turma X ja tem N de N vagas ocupadas." Por ser trigger, vale para qualquer inserção, inclusive as da massa de dados.
+Conta os matriculados da turma e, se já forem iguais ao número de vagas, cancela o `INSERT` com `SIGNAL SQLSTATE '45000'` e a mensagem "Turma lotada: a turma X já tem N de N vagas ocupadas." Por ser trigger, vale para qualquer inserção, inclusive as da massa de dados.
 
 A leitura das vagas usa `SELECT ... FOR UPDATE`, que trava a linha da turma até o fim da transação. Duas matrículas simultâneas na última vaga entram em fila e a segunda já encontra a turma lotada.
 

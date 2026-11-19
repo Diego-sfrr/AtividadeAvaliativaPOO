@@ -434,7 +434,7 @@ BEGIN
 
         IF v_matriculados >= v_vagas THEN
             SET v_msg = CONCAT('Turma lotada: a turma ', NEW.id_turma,
-                               ' ja tem ', v_matriculados, ' de ', v_vagas,
+                               ' já tem ', v_matriculados, ' de ', v_vagas,
                                ' vagas ocupadas.');
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_msg;
         END IF;
