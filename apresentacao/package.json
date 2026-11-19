@@ -1,0 +1,12 @@
+{
+  "name": "sga-apresentacao",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gerador do modelo de slides do SGA (apresentacao/SGA_apresentacao.pptx)",
+  "scripts": {
+    "gerar": "node gerar_slides.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "3.12.0"
+  }
+}
