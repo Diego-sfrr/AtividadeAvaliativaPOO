@@ -19,7 +19,7 @@ O SGA centraliza o controle de turmas, matrículas, notas, frequência, históri
 ## Tecnologias
 
 - **Banco de dados:** MySQL + MySQL Workbench (8.0.16 ou superior: antes disso o MySQL ignora os CHECKs)
-- **Interface:** linguagem a definir pelo grupo (Python, C#, Node.js, Java, C++...). **PHP é proibido.**
+- **Interface:** aplicação desktop em Java Swing, com JDBC e MySQL Connector/J. **PHP é proibido.**
 - **Comunicação interface ↔ banco:** somente via **Stored Procedures e Views**. Não pode trafegar SQL "cru" pela rede.
 - **Senhas:** armazenadas com hash (SHA-256 ou BCRYPT). Nunca em texto puro.
 
@@ -53,7 +53,7 @@ O `01_ddl.sql` apaga e recria o banco `sga_fbi`, então dá para rodar tudo de n
 
 ## Como rodar a interface
 
-_A preencher quando a linguagem for definida (dependências + instruções de execução em `app/README.md`)._
+Consulte [`app/README.md`](app/README.md) para configurar a conexão. Com JDK 17+, Maven 3.9+ e o banco carregado, abra um terminal na pasta `app`, configure `SGA_DB_URL`, `SGA_DB_USER` e `SGA_DB_PASSWORD` e execute `mvn clean compile exec:java`.
 
 ## Fluxo de trabalho com Git
 
