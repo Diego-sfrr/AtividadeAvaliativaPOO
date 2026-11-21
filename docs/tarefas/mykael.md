@@ -12,7 +12,7 @@ Stored procedures e roteiro de testes.
 - [x] `sp_lancar_exame` (somente se "Em Exame")
 - [x] `sp_historico_aluno`
 - [x] `sp_fechar_semestre` (cursor + transação; somente Coordenador)
-- [x] `04_testes.sql`: os 9 testes obrigatórios
+- [x] `04_testes.sql`: testes obrigatórios e cenários adicionais
 - [x] Casos de teste e resultados para o relatório
 - [x] Aplicação desktop Java Swing/JDBC integrada em `app/` (login, menus por perfil, consultas e operações acadêmicas)
 
@@ -29,7 +29,7 @@ As procedures foram executadas no MySQL Workbench em uma base local com massa de
 - As três views acadêmicas retornaram dados; o histórico do aluno 1 retornou três matrículas.
 - Matrícula válida foi aceita. Secretário não pôde fechar semestre; Coordenador encerrou duas turmas de `2026.1`.
 
-O `04_testes.sql` usa os IDs da massa local `dev_03_dados_mykael.sql`, que está na cópia isolada de desenvolvimento. Ao integrar com a massa oficial de Guilherme, ajustar os IDs dos cenários conforme necessário. Execute cada bloco separadamente no Workbench, pois os testes negativos interrompem o restante do script.
+Os resultados acima foram observados na massa de desenvolvimento local. O roteiro integrado `04_testes.sql` usa a massa oficial de `03_dados.sql`; execute cada bloco separadamente no Workbench, pois alguns casos negativos são esperados e interrompem a execução seguinte.
 
 ## Também contribuo com
 - [ ] Minha parte do relatório técnico (`relatorio/`)
