@@ -16,6 +16,8 @@
 --   sp_editar_aluno     altera todos os dados, inclusive o status
 --   sp_excluir_aluno    exclui só quem nunca se matriculou
 --   vw_alunos           listagem de alunos com o nome do curso
+--   vw_cr_aluno         CR (fn_cr_aluno) de cada aluno, para histórico e boletim
+--   vw_log_nota         auditoria de notas (RN08) legível, para a tela do Coordenador
 --
 -- Combinados do grupo usados aqui:
 --   * Regra quebrada vira SIGNAL SQLSTATE '45000' com MESSAGE_TEXT
@@ -38,6 +40,8 @@ USE sga_fbi;
 DROP PROCEDURE IF EXISTS sp_excluir_aluno;
 DROP PROCEDURE IF EXISTS sp_editar_aluno;
 DROP PROCEDURE IF EXISTS sp_cadastrar_aluno;
+DROP VIEW IF EXISTS vw_log_nota;
+DROP VIEW IF EXISTS vw_cr_aluno;
 DROP VIEW IF EXISTS vw_alunos;
 
 
@@ -65,6 +69,52 @@ SELECT a.id_aluno,
        a.status
   FROM aluno a
   JOIN curso c ON c.id_curso = a.id_curso;
+
+
+-- ------------------------------------------------------------
+-- vw_cr_aluno
+-- Uma linha por aluno com o Coeficiente de Rendimento calculado pela
+-- fn_cr_aluno (média final ponderada pela carga horária, só das
+-- disciplinas concluídas). Aluno sem disciplina concluída aparece
+-- com cr NULL: a interface mostra "sem disciplinas concluídas".
+--
+-- Uso:  SELECT cr FROM vw_cr_aluno WHERE id_aluno = ?;
+-- ------------------------------------------------------------
+CREATE VIEW vw_cr_aluno AS
+SELECT a.id_aluno,
+       a.nome AS aluno,
+       a.ra,
+       fn_cr_aluno(a.id_aluno) AS cr
+  FROM aluno a;
+
+-- ------------------------------------------------------------
+-- vw_log_nota
+-- Auditoria de notas (RN08) em forma legível: cada linha do log_nota
+-- (gravada pelo trg_auditoria_nota) com o aluno, a disciplina, o
+-- semestre e o nome de quem alterou. A ordenação (mais recente
+-- primeiro) fica na consulta: ORDER BY data_hora DESC, id_log DESC.
+-- Só o Coordenador acessa a tela que lê esta view.
+--
+-- Uso:  SELECT * FROM vw_log_nota ORDER BY data_hora DESC, id_log DESC LIMIT 500;
+-- ------------------------------------------------------------
+CREATE VIEW vw_log_nota AS
+SELECT l.id_log,
+       l.id_matricula,
+       a.nome       AS aluno,
+       a.ra,
+       d.nome       AS disciplina,
+       t.semestre,
+       l.campo,
+       l.valor_antigo,
+       l.valor_novo,
+       u.nome       AS usuario,
+       l.data_hora
+  FROM log_nota l
+  JOIN matricula m  ON m.id_matricula = l.id_matricula
+  JOIN aluno a      ON a.id_aluno = m.id_aluno
+  JOIN turma t      ON t.id_turma = m.id_turma
+  JOIN disciplina d ON d.id_disciplina = t.id_disciplina
+  JOIN usuario u    ON u.id_usuario = l.usuario;
 
 
 -- ============================================================
