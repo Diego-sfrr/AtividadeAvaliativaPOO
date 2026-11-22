@@ -153,7 +153,27 @@ public final class SgaRepository {
         }
     }
 
-    public void fecharSemestre(String semestre, int usuarioId)
+    /** Matrículas de uma turma (vw_boletim), ordenadas pelo nome do aluno. */
+    public List<String[]> boletimDaTurma(int turmaId) throws SQLException {
+        String sql = "SELECT * FROM vw_boletim "
+                + "WHERE id_turma = ? ORDER BY aluno";
+
+        try (Connection connection = DatabaseConfig.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, turmaId);
+
+            try (ResultSet rows = statement.executeQuery()) {
+                return readRows(rows);
+            }
+        }
+    }
+
+    /**
+     * Fecha o semestre e devolve o resumo de matrículas por situação
+     * (primeira linha = cabeçalho), como a procedure retorna.
+     */
+    public List<String[]> fecharSemestre(String semestre, int usuarioId)
             throws SQLException {
 
         try (Connection connection = DatabaseConfig.openConnection();
@@ -163,7 +183,23 @@ public final class SgaRepository {
             call.setString(1, semestre);
             call.setInt(2, usuarioId);
 
-            call.execute();
+            boolean hasResult = call.execute();
+
+            while (true) {
+                if (hasResult) {
+                    try (ResultSet rows = call.getResultSet()) {
+                        if (rows != null) {
+                            return readRows(rows);
+                        }
+                    }
+                } else if (call.getUpdateCount() == -1) {
+                    break;
+                }
+
+                hasResult = call.getMoreResults();
+            }
+
+            return List.of();
         }
     }
 

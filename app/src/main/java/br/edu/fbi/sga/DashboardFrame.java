@@ -12,10 +12,12 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("serial")
@@ -53,23 +55,16 @@ public final class DashboardFrame extends JFrame {
         addButton("Matricular", this::enrollStudent);
         addButton("Histórico", this::showHistory);
 
-        // Funcionalidades do Secretário
-        if (usuario.isSecretario()) {
+        // Secretário e Coordenador (acesso total) gerenciam alunos
+        if (usuario.isSecretario() || usuario.isCoordenador()) {
             addButton("Alunos", this::showAlunos);
         }
 
-        // Funcionalidades do Coordenador
+        // Funcionalidades exclusivas do Coordenador
         if (usuario.isCoordenador()) {
-
-            addButton("Desempenho", () ->
-                    showView("vw_desempenho_turma"));
-
-            addButton("Faturamento", () ->
-                    showView("vw_faturamento_curso"));
-
-            addButton("Lançar notas", this::launchGrades);
-            addButton("Lançar exame", this::launchExam);
+            addButton("Notas e exame", this::showNotas);
             addButton("Fechar semestre", this::closeSemester);
+            addButton("Relatórios", this::showRelatorios);
         }
 
         addButton("Sair", () -> {
@@ -377,80 +372,128 @@ public final class DashboardFrame extends JFrame {
     }
 
     // ==========================================
-    // NOTAS E EXAME
+    // TELAS DO COORDENADOR
     // ==========================================
 
-    private void launchGrades() {
-
-        try {
-            int id = askInt("ID da matrícula:");
-            double n1 = askDouble("Nota N1 (0 a 10):");
-            double n2 = askDouble("Nota N2 (0 a 10):");
-            int faltas = askInt("Quantidade de faltas:");
-
-            repository.lancarNotas(
-                    id, n1, n2, faltas, usuario.id());
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Notas enviadas ao banco."
-            );
-
-        } catch (CancelledInput ignored) {
-        } catch (Exception exception) {
-            showError(exception);
-        }
+    private void showNotas() {
+        new NotasFrame(repository, usuario.id()).setVisible(true);
     }
 
-    private void launchExam() {
-
-        try {
-            int id = askInt("ID da matrícula:");
-            double grade = askDouble("Nota do exame (0 a 10):");
-
-            repository.lancarExame(
-                    id, grade, usuario.id());
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Nota do exame enviada ao banco."
-            );
-
-        } catch (CancelledInput ignored) {
-        } catch (Exception exception) {
-            showError(exception);
-        }
+    private void showRelatorios() {
+        new RelatoriosFrame(repository).setVisible(true);
     }
-
-    // ==========================================
-    // FECHAMENTO DO SEMESTRE
-    // ==========================================
 
     private void closeSemester() {
 
-        String semester = JOptionPane.showInputDialog(
+        List<String> semestres;
+
+        try {
+            semestres = semestresAbertos();
+        } catch (SQLException exception) {
+            showError(exception);
+            return;
+        }
+
+        if (semestres.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Não há turmas abertas para fechar.",
+                    "Fechar semestre",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        JComboBox<String> combo =
+                new JComboBox<>(semestres.toArray(new String[0]));
+
+        JPanel painel = new JPanel(new GridLayout(0, 1, 6, 6));
+        painel.add(new JLabel("Semestre com turmas abertas:"));
+        painel.add(combo);
+
+        int escolha = JOptionPane.showConfirmDialog(
                 this,
-                "Semestre (ex.: 2026.2):",
+                painel,
                 "Fechar semestre",
-                JOptionPane.QUESTION_MESSAGE
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
         );
 
-        if (semester == null || semester.isBlank()) {
+        if (escolha != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String semestre = (String) combo.getSelectedItem();
+
+        int confirmar = JOptionPane.showConfirmDialog(
+                this,
+                "Fechar o semestre " + semestre + "?\n\n"
+                + "As turmas serão encerradas e as notas não poderão\n"
+                + "mais ser alteradas. Matrículas Em Exame sem exame\n"
+                + "ficam como Reprovado por Nota.",
+                "Confirmar fechamento",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmar != JOptionPane.YES_OPTION) {
             return;
         }
 
         try {
-            repository.fecharSemestre(
-                    semester.trim(), usuario.id());
+            List<String[]> resumo =
+                    repository.fecharSemestre(semestre, usuario.id());
+
+            JPanel resultado = new JPanel(new BorderLayout(6, 6));
+            resultado.add(new JLabel("Semestre " + semestre
+                    + " fechado. Matrículas por situação:"),
+                    BorderLayout.NORTH);
+
+            if (resumo.size() > 1) {
+                JScrollPane scroll =
+                        new JScrollPane(Tabelas.tabela(resumo));
+                scroll.setPreferredSize(new Dimension(380, 140));
+                resultado.add(scroll, BorderLayout.CENTER);
+            }
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Solicitação de fechamento concluída."
+                    resultado,
+                    "Fechar semestre",
+                    JOptionPane.INFORMATION_MESSAGE
             );
+
+            showView("vw_turmas_lotacao");
 
         } catch (SQLException exception) {
             showError(exception);
         }
+    }
+
+    /** Semestres que ainda têm alguma turma com status Aberta. */
+    private List<String> semestresAbertos() throws SQLException {
+
+        List<String[]> turmas =
+                repository.consultarView("vw_turmas_lotacao");
+
+        List<String> semestres = new ArrayList<>();
+
+        if (turmas.size() > 1) {
+            int idxSemestre = findColumn(turmas.get(0), "semestre");
+            int idxStatus = findColumn(turmas.get(0), "status");
+
+            for (int i = 1; i < turmas.size(); i++) {
+                String[] linha = turmas.get(i);
+                String semestre = cell(linha, idxSemestre);
+
+                if ("Aberta".equalsIgnoreCase(cell(linha, idxStatus))
+                        && !semestres.contains(semestre)) {
+                    semestres.add(semestre);
+                }
+            }
+        }
+
+        return semestres;
     }
 
     // ==========================================
@@ -466,18 +509,6 @@ public final class DashboardFrame extends JFrame {
         }
 
         return Integer.parseInt(value.trim());
-    }
-
-    private double askDouble(String prompt) throws CancelledInput {
-
-        String value = JOptionPane.showInputDialog(this, prompt);
-
-        if (value == null) {
-            throw new CancelledInput();
-        }
-
-        return Double.parseDouble(
-                value.trim().replace(',', '.'));
     }
 
     // ==========================================

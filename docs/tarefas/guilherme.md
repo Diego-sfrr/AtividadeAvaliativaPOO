@@ -20,9 +20,9 @@ Arquivos: `database/01_ddl.sql`, `database/02c_procedures_cadastro.sql`, `databa
 - [x] Comentário no topo do `03_dados.sql` com logins/senhas de teste e IDs dos cenários
 
 ## S3 · Telas do Coordenador (até 15/11)
-- [ ] Lançar notas e exame
-- [ ] Fechar semestre (`sp_fechar_semestre`)
-- [ ] Relatórios: desempenho, lotação e faturamento
+- [x] Lançar notas e exame
+- [x] Fechar semestre (`sp_fechar_semestre`)
+- [x] Relatórios: desempenho, lotação e faturamento
 
 ## S4 · Relatório (até 20/11)
 - [ ] MER, modelo lógico e justificativa da 3FN no relatório
