@@ -1,6 +1,10 @@
 
 package br.edu.fbi.sga;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
+import javax.swing.SwingConstants;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -9,11 +13,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Insets;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
 import java.sql.SQLException;
@@ -26,11 +31,13 @@ public final class DashboardFrame extends JFrame {
     private final Usuario usuario;
     private final SgaRepository repository;
 
-    private final JPanel actions =
-            new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private final JPanel sidebar = new JPanel();
 
     private final JPanel content =
             new JPanel(new BorderLayout());
+
+    private final JLabel tituloLabel = new JLabel(" ");
+    private final JLabel subtituloLabel = new JLabel(" ");
 
     public DashboardFrame(Usuario usuario, SgaRepository repository) {
         super("SGA | Painel");
@@ -39,21 +46,50 @@ public final class DashboardFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 620);
+        setSize(1180, 700);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        add(new JLabel("  Olá, " + usuario.nome()
-                + " | Perfil: " + usuario.perfil()), BorderLayout.NORTH);
+        montarMenuLateral();
 
-        add(actions, BorderLayout.SOUTH);
-        add(content, BorderLayout.CENTER);
+        // Cabeçalho com o título da seção atual
+        tituloLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        tituloLabel.setForeground(Tema.TEXTO);
+        subtituloLabel.setForeground(Tema.TEXTO_SUAVE);
 
-        addButton("Turmas", () ->
-                showView("vw_turmas_lotacao"));
+        JPanel textos = new JPanel(new BorderLayout(0, 2));
+        textos.setOpaque(false);
+        textos.add(tituloLabel, BorderLayout.NORTH);
+        textos.add(subtituloLabel, BorderLayout.SOUTH);
 
+        JPanel cabecalho = new JPanel(new BorderLayout());
+        cabecalho.setBackground(Color.WHITE);
+        cabecalho.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Tema.BORDA),
+                BorderFactory.createEmptyBorder(16, 28, 16, 28)));
+        cabecalho.add(textos, BorderLayout.CENTER);
+
+        content.setBackground(Tema.FUNDO);
+        content.setBorder(BorderFactory.createEmptyBorder(20, 24, 24, 24));
+
+        JPanel direita = new JPanel(new BorderLayout());
+        direita.add(cabecalho, BorderLayout.NORTH);
+        direita.add(content, BorderLayout.CENTER);
+
+        add(sidebar, BorderLayout.WEST);
+        add(direita, BorderLayout.CENTER);
+
+        // Menu por perfil
+        addSection("CONSULTAS");
+        addButton("Turmas", () -> {
+            titulo("Turmas", "Vagas, matriculados e ocupação de cada turma");
+            showView("vw_turmas_lotacao");
+        });
         addButton("Boletim", this::showBoletim);
-        addButton("Matricular", this::enrollStudent);
         addButton("Histórico", this::showHistory);
+
+        addSection("SECRETARIA");
+        addButton("Matricular", this::enrollStudent);
 
         // Secretário e Coordenador (acesso total) gerenciam alunos
         if (usuario.isSecretario() || usuario.isCoordenador()) {
@@ -62,21 +98,92 @@ public final class DashboardFrame extends JFrame {
 
         // Funcionalidades exclusivas do Coordenador
         if (usuario.isCoordenador()) {
+            addSection("COORDENAÇÃO");
             addButton("Notas e exame", this::showNotas);
             addButton("Fechar semestre", this::closeSemester);
             addButton("Relatórios", this::showRelatorios);
         }
 
+        sidebar.add(Box.createVerticalGlue());
         addButton("Sair", () -> {
             new LoginFrame().setVisible(true);
             dispose();
         });
+
+        // Tela inicial
+        titulo("Turmas", "Vagas, matriculados e ocupação de cada turma");
+        showView("vw_turmas_lotacao");
+    }
+
+    private void montarMenuLateral() {
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setBackground(Tema.MARINHO);
+        sidebar.setPreferredSize(new Dimension(240, 0));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(24, 14, 18, 14));
+
+        JLabel marca = new JLabel("SGA");
+        marca.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        marca.setForeground(Color.WHITE);
+        marca.setAlignmentX(LEFT_ALIGNMENT);
+        marca.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        JLabel faculdade = new JLabel("Gestão Acadêmica");
+        faculdade.setForeground(new Color(0x94A3B8));
+        faculdade.setFont(faculdade.getFont().deriveFont(12f));
+        faculdade.setAlignmentX(LEFT_ALIGNMENT);
+        faculdade.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        // Cartão do usuário logado
+        JLabel nome = new JLabel(usuario.nome());
+        nome.setForeground(Color.WHITE);
+        nome.setFont(nome.getFont().deriveFont(Font.BOLD, 14f));
+
+        JLabel perfil = new JLabel(usuario.perfil().toUpperCase());
+        perfil.setForeground(usuario.isCoordenador()
+                ? new Color(0x93C5FD) : new Color(0x86EFAC));
+        perfil.setFont(perfil.getFont().deriveFont(Font.BOLD, 11f));
+
+        JPanel cartao = new JPanel(new BorderLayout(0, 3));
+        cartao.setBackground(Tema.MARINHO_CLARO);
+        cartao.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+        cartao.add(nome, BorderLayout.NORTH);
+        cartao.add(perfil, BorderLayout.SOUTH);
+        cartao.setAlignmentX(LEFT_ALIGNMENT);
+        cartao.setMaximumSize(new Dimension(Integer.MAX_VALUE, 62));
+
+        sidebar.add(marca);
+        sidebar.add(faculdade);
+        sidebar.add(Box.createVerticalStrut(22));
+        sidebar.add(cartao);
+        sidebar.add(Box.createVerticalStrut(10));
+    }
+
+    private void addSection(String texto) {
+        JLabel secao = new JLabel(texto);
+        secao.setForeground(new Color(0x64748B));
+        secao.setFont(secao.getFont().deriveFont(Font.BOLD, 11f));
+        secao.setAlignmentX(LEFT_ALIGNMENT);
+        secao.setBorder(BorderFactory.createEmptyBorder(16, 10, 6, 0));
+        sidebar.add(secao);
     }
 
     private void addButton(String label, Runnable action) {
         JButton button = new JButton(label);
+        button.putClientProperty("JButton.buttonType", "toolBarButton");
+        button.setForeground(new Color(0xE2E8F0));
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setFont(button.getFont().deriveFont(14f));
+        button.setMargin(new Insets(9, 12, 9, 12));
+        button.setFocusable(false);
+        button.setAlignmentX(LEFT_ALIGNMENT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         button.addActionListener(event -> action.run());
-        actions.add(button);
+        sidebar.add(button);
+    }
+
+    private void titulo(String titulo, String subtitulo) {
+        tituloLabel.setText(titulo);
+        subtituloLabel.setText(subtitulo);
     }
 
     // ==========================================
@@ -113,8 +220,13 @@ public final class DashboardFrame extends JFrame {
         }
 
         try {
-            showRows(repository.historicoAluno(
-                    Integer.parseInt(value.trim())));
+            int alunoId = Integer.parseInt(value.trim());
+
+            List<String[]> historico = repository.historicoAluno(alunoId);
+
+            titulo("Histórico do aluno " + alunoId,
+                    "Todas as disciplinas cursadas, por semestre");
+            showRows(historico);
 
         } catch (NumberFormatException exception) {
             JOptionPane.showMessageDialog(
@@ -135,7 +247,12 @@ public final class DashboardFrame extends JFrame {
             int alunoId = askInt(
                     "ID do aluno para consultar o boletim:");
 
-            showRows(repository.consultarBoletimAluno(alunoId));
+            List<String[]> boletim =
+                    repository.consultarBoletimAluno(alunoId);
+
+            titulo("Boletim do aluno " + alunoId,
+                    "Notas, faltas, frequência e situação por disciplina");
+            showRows(boletim);
 
         } catch (CancelledInput ignored) {
         } catch (NumberFormatException exception) {
@@ -521,35 +638,19 @@ public final class DashboardFrame extends JFrame {
 
         if (rows.isEmpty() || rows.size() == 1) {
 
-            content.add(
-                    new JLabel("Nenhum registro retornado."),
-                    BorderLayout.NORTH
-            );
+            JLabel vazio = new JLabel("Nenhum registro retornado.");
+            vazio.setForeground(Tema.TEXTO_SUAVE);
+            content.add(vazio, BorderLayout.NORTH);
 
         } else {
 
-            String[] headers = rows.get(0);
+            JTable table = Tabelas.tabela(rows);
 
-            Object[][] data = rows.subList(1, rows.size())
-                    .stream()
-                    .map(row -> (Object[]) row)
-                    .toArray(Object[][]::new);
+            JScrollPane scroll = new JScrollPane(table);
+            scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDA));
+            scroll.getViewport().setBackground(Color.WHITE);
 
-            JTable table = new JTable(
-                    new DefaultTableModel(data, headers) {
-
-                        @Override
-                        public boolean isCellEditable(
-                                int row, int column) {
-                            return false;
-                        }
-                    }
-            );
-
-            content.add(
-                    new JScrollPane(table),
-                    BorderLayout.CENTER
-            );
+            content.add(scroll, BorderLayout.CENTER);
         }
 
         content.revalidate();

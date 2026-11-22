@@ -2,6 +2,7 @@
 package br.edu.fbi.sga;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.sql.SQLException;
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -35,25 +37,37 @@ public final class AlunosFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 620);
+        setSize(1180, 660);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FUNDO);
 
-        JLabel titulo = new JLabel("  Gerenciamento de alunos");
-        add(titulo, BorderLayout.NORTH);
+        add(Tema.cabecalho("Gerenciamento de alunos",
+                "Cadastre, edite e exclua alunos"), BorderLayout.NORTH);
 
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setAutoCreateRowSorter(true);
+        Tema.estilizar(tabela);
 
-        add(new JScrollPane(tabela), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(tabela);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDA));
+        scroll.getViewport().setBackground(Color.WHITE);
 
-        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel centro = new JPanel(new BorderLayout());
+        centro.setBackground(Tema.FUNDO);
+        centro.setBorder(BorderFactory.createEmptyBorder(16, 24, 0, 24));
+        centro.add(scroll, BorderLayout.CENTER);
+        add(centro, BorderLayout.CENTER);
 
-        JButton novo = new JButton("Cadastrar aluno");
-        JButton editar = new JButton("Editar selecionado");
-        JButton excluir = new JButton("Excluir selecionado");
-        JButton atualizar = new JButton("Atualizar lista");
-        JButton fechar = new JButton("Fechar");
+        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        botoes.setBackground(Tema.FUNDO);
+        botoes.setBorder(BorderFactory.createEmptyBorder(12, 24, 14, 24));
+
+        JButton novo = Tema.primario(new JButton("Cadastrar aluno"));
+        JButton editar = Tema.secundario(new JButton("Editar selecionado"));
+        JButton excluir = Tema.secundario(new JButton("Excluir selecionado"));
+        JButton atualizar = Tema.secundario(new JButton("Atualizar lista"));
+        JButton fechar = Tema.secundario(new JButton("Fechar"));
 
         novo.addActionListener(e -> cadastrar());
         editar.addActionListener(e -> editarSelecionado());
@@ -116,6 +130,7 @@ public final class AlunosFrame extends JFrame {
             }
 
             tabela.setModel(modelo);
+            Tema.estilizar(tabela);
 
         } catch (SQLException e) {
             mostrarErro(e);

@@ -46,7 +46,7 @@ final class Tabelas {
     static JTable tabela(List<String[]> linhas) {
         JTable tabela = new JTable(modelo(linhas));
         tabela.setAutoCreateRowSorter(true);
-        tabela.setFillsViewportHeight(true);
+        Tema.estilizar(tabela);
         return tabela;
     }
 }

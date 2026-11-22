@@ -1,12 +1,14 @@
 package br.edu.fbi.sga;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -48,27 +50,49 @@ public final class NotasFrame extends JFrame {
         this.usuarioId = usuarioId;
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 560);
+        setSize(1180, 640);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FUNDO);
 
-        JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topo.add(new JLabel("Turma (aberta):"));
-        topo.add(comboTurmas);
+        JPanel topo = new JPanel(new BorderLayout());
+        topo.add(Tema.cabecalho("Notas e exame",
+                "Lance N1, N2, faltas e exame das turmas abertas"), BorderLayout.NORTH);
+
+        JPanel filtro = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 12));
+        filtro.setBackground(Tema.FUNDO);
+        JLabel rotuloTurma = new JLabel("Turma");
+        rotuloTurma.setForeground(Tema.TEXTO_SUAVE);
+        filtro.add(rotuloTurma);
+        filtro.add(comboTurmas);
+        topo.add(filtro, BorderLayout.SOUTH);
         add(topo, BorderLayout.NORTH);
 
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setAutoCreateRowSorter(true);
-        tabela.setFillsViewportHeight(true);
-        add(new JScrollPane(tabela), BorderLayout.CENTER);
+        Tema.estilizar(tabela);
+
+        JScrollPane scroll = new JScrollPane(tabela);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDA));
+        scroll.getViewport().setBackground(Color.WHITE);
+
+        JPanel centro = new JPanel(new BorderLayout());
+        centro.setBackground(Tema.FUNDO);
+        centro.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 24));
+        centro.add(scroll, BorderLayout.CENTER);
+        add(centro, BorderLayout.CENTER);
 
         JPanel rodape = new JPanel(new BorderLayout());
-        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        rodape.setBackground(Tema.FUNDO);
+        rodape.setBorder(BorderFactory.createEmptyBorder(12, 24, 14, 24));
 
-        JButton notas = new JButton("Lançar notas");
-        JButton exame = new JButton("Lançar exame");
-        JButton atualizar = new JButton("Atualizar");
-        JButton fechar = new JButton("Fechar");
+        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        botoes.setOpaque(false);
+
+        JButton notas = Tema.primario(new JButton("Lançar notas"));
+        JButton exame = Tema.primario(new JButton("Lançar exame"));
+        JButton atualizar = Tema.secundario(new JButton("Atualizar"));
+        JButton fechar = Tema.secundario(new JButton("Fechar"));
 
         notas.addActionListener(e -> lancarNotas());
         exame.addActionListener(e -> lancarExame());
@@ -79,6 +103,9 @@ public final class NotasFrame extends JFrame {
         botoes.add(exame);
         botoes.add(atualizar);
         botoes.add(fechar);
+
+        aviso.setForeground(Tema.TEXTO_SUAVE);
+        aviso.setBorder(BorderFactory.createEmptyBorder(10, 2, 0, 0));
 
         rodape.add(botoes, BorderLayout.NORTH);
         rodape.add(aviso, BorderLayout.SOUTH);
@@ -165,6 +192,7 @@ public final class NotasFrame extends JFrame {
             }
 
             tabela.setModel(modelo);
+            Tema.estilizar(tabela);
             aviso.setText("  " + (linhas.size() - 1) + " matrícula(s) em "
                     + turma.disciplina() + " (" + turma.semestre() + ").");
 

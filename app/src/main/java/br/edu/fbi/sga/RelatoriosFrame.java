@@ -1,6 +1,8 @@
 package br.edu.fbi.sga;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.FlowLayout;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -8,6 +10,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -28,15 +31,25 @@ public final class RelatoriosFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 560);
+        setSize(1180, 640);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(8, 8));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FUNDO);
 
-        add(abas, BorderLayout.CENTER);
+        add(Tema.cabecalho("Relatórios",
+                "Desempenho das turmas, lotação e faturamento por curso"), BorderLayout.NORTH);
 
-        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton atualizar = new JButton("Atualizar");
-        JButton fechar = new JButton("Fechar");
+        JPanel centro = new JPanel(new BorderLayout());
+        centro.setBackground(Tema.FUNDO);
+        centro.setBorder(BorderFactory.createEmptyBorder(16, 24, 0, 24));
+        centro.add(abas, BorderLayout.CENTER);
+        add(centro, BorderLayout.CENTER);
+
+        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        botoes.setBackground(Tema.FUNDO);
+        botoes.setBorder(BorderFactory.createEmptyBorder(12, 24, 14, 24));
+        JButton atualizar = Tema.primario(new JButton("Atualizar"));
+        JButton fechar = Tema.secundario(new JButton("Fechar"));
         atualizar.addActionListener(e -> carregar());
         fechar.addActionListener(e -> dispose());
         botoes.add(atualizar);
@@ -68,10 +81,14 @@ public final class RelatoriosFrame extends JFrame {
 
     private static JPanel painelSimples(List<String[]> linhas) {
         JPanel painel = new JPanel(new BorderLayout());
+        painel.setBackground(Color.WHITE);
         if (linhas.size() <= 1) {
             painel.add(new JLabel("  Nenhum registro retornado."), BorderLayout.NORTH);
         } else {
-            painel.add(new JScrollPane(Tabelas.tabela(linhas)), BorderLayout.CENTER);
+            JScrollPane scroll = new JScrollPane(Tabelas.tabela(linhas));
+            scroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Tema.BORDA));
+            scroll.getViewport().setBackground(Color.WHITE);
+            painel.add(scroll, BorderLayout.CENTER);
         }
         return painel;
     }
@@ -99,8 +116,14 @@ public final class RelatoriosFrame extends JFrame {
 
             String moeda = NumberFormat
                     .getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(total);
-            painel.add(new JLabel("  Total mensal: " + moeda
-                    + "  (" + alunos + " alunos ativos)"), BorderLayout.SOUTH);
+            JLabel rodape = new JLabel("Faturamento mensal previsto: " + moeda
+                    + "   ·   " + alunos + " alunos ativos");
+            rodape.setFont(rodape.getFont().deriveFont(Font.BOLD, 15f));
+            rodape.setForeground(Tema.AZUL);
+            rodape.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(1, 0, 0, 0, Tema.BORDA),
+                    BorderFactory.createEmptyBorder(12, 16, 12, 16)));
+            painel.add(rodape, BorderLayout.SOUTH);
         }
 
         return painel;
