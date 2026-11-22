@@ -33,7 +33,7 @@ h1 { page-break-before: always; font-size: 19pt; }
 section.primeira h1 { page-break-before: avoid; }
 pre.code { font-size: 8.6pt; page-break-inside: auto; margin: 2mm 0 2mm; border-left: 3px solid #2563eb; }
 table { font-size: 9.2pt; }
-td:first-child { white-space: nowrap; font-family: Consolas, monospace; font-size: 8.6pt; color: #1e3a8a; }
+td:first-child { width: 34%; white-space: normal; overflow-wrap: anywhere; font-family: Consolas, monospace; font-size: 8.6pt; color: #1e3a8a; }
 blockquote { background: #fffbeb; border-left-color: #f59e0b; }
 .capa .marca { font-size: 54pt; }
 '''
