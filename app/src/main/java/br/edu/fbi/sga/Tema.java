@@ -129,7 +129,62 @@ final class Tema {
         tabela.setShowHorizontalLines(true);
         tabela.getTableHeader().setReorderingAllowed(false);
         tabela.setDefaultRenderer(Object.class, new Celula());
+        esconderColunasTecnicas(tabela);
+        rotular(tabela);
         ajustarColunas(tabela);
+    }
+
+    /** No boletim, os identificadores internos só atrapalham a leitura. */
+    private static void esconderColunasTecnicas(JTable tabela) {
+        if (indice(tabela, "id_matricula") < 0 || indice(tabela, "disciplina") < 0) {
+            return;
+        }
+        for (String nome : new String[] {"id_matricula", "id_turma", "id_aluno"}) {
+            int i = indice(tabela, nome);
+            if (i >= 0) {
+                tabela.removeColumn(tabela.getColumnModel().getColumn(i));
+            }
+        }
+    }
+
+    private static int indice(JTable tabela, String nome) {
+        try {
+            return tabela.getColumnModel().getColumnIndex(nome);
+        } catch (IllegalArgumentException e) {
+            return -1;
+        }
+    }
+
+    private static final Map<String, String> ROTULOS = Map.ofEntries(
+            Map.entry("id_aluno", "ID aluno"), Map.entry("id_curso", "ID curso"),
+            Map.entry("id_turma", "Turma"), Map.entry("id_matricula", "Matrícula"),
+            Map.entry("id_log", "ID"), Map.entry("ra", "RA"), Map.entry("cpf", "CPF"),
+            Map.entry("email", "E-mail"), Map.entry("data_nascimento", "Nascimento"),
+            Map.entry("vagas_restantes", "Restantes"), Map.entry("perc_ocupacao", "Ocupação %"),
+            Map.entry("media_turma", "Média"), Map.entry("maior_nota", "Maior nota"),
+            Map.entry("menor_nota", "Menor nota"), Map.entry("perc_aprovados", "Aprovados %"),
+            Map.entry("perc_reprovados", "Reprovados %"), Map.entry("perc_em_andamento", "Em andamento %"),
+            Map.entry("valor_mensalidade", "Mensalidade"), Map.entry("alunos_ativos", "Alunos ativos"),
+            Map.entry("faturamento_mensal", "Faturamento mensal"), Map.entry("n1", "N1"),
+            Map.entry("n2", "N2"), Map.entry("media_final", "Média final"),
+            Map.entry("total_aulas", "Aulas"), Map.entry("frequencia", "Freq. %"),
+            Map.entry("situacao", "Situação"), Map.entry("carga_horaria", "Carga horária"),
+            Map.entry("data_hora", "Data/hora"), Map.entry("valor_antigo", "Valor antigo"),
+            Map.entry("valor_novo", "Valor novo"));
+
+    /** Troca nomes de coluna do banco (snake_case) por rótulos legíveis. */
+    private static void rotular(JTable tabela) {
+        for (int c = 0; c < tabela.getColumnCount(); c++) {
+            TableColumn coluna = tabela.getColumnModel().getColumn(c);
+            String nome = String.valueOf(coluna.getIdentifier());
+            String rotulo = ROTULOS.get(nome);
+            if (rotulo == null) {
+                String t = nome.replace('_', ' ');
+                rotulo = t.isEmpty() ? t : Character.toUpperCase(t.charAt(0)) + t.substring(1);
+            }
+            coluna.setHeaderValue(rotulo);
+        }
+        tabela.getTableHeader().repaint();
     }
 
     /** Largura de cada coluna conforme o conteúdo (até um limite). */

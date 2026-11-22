@@ -46,7 +46,7 @@ public final class DashboardFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1180, 700);
+        setSize(1320, 740);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
