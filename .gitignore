@@ -25,3 +25,6 @@ Thumbs.db
 dist/
 build/
 *.zip
+
+# Intermediario do relatorio (so o PDF vai para o repositorio)
+relatorio/Relatorio_SGA.html

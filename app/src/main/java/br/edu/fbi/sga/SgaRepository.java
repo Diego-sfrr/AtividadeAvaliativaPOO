@@ -1,6 +1,7 @@
 
 package br.edu.fbi.sga;
 
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,7 +50,8 @@ public final class SgaRepository {
         String sql = switch (viewName) {
             case "vw_turmas_lotacao",
                  "vw_desempenho_turma",
-                 "vw_faturamento_curso" -> "SELECT * FROM " + viewName;
+                 "vw_faturamento_curso",
+                 "vw_cr_aluno" -> "SELECT * FROM " + viewName;
 
             default -> throw new IllegalArgumentException(
                     "View não permitida: " + viewName
@@ -76,6 +78,44 @@ public final class SgaRepository {
             try (ResultSet rows = statement.executeQuery()) {
                 return readRows(rows);
             }
+        }
+    }
+
+    /** CR de um aluno (vw_cr_aluno). {@code cr} é null se não há disciplina concluída. */
+    public record CrAluno(String aluno, String ra, BigDecimal cr) { }
+
+    /** Devolve null se o aluno não existe. */
+    public CrAluno consultarCr(int alunoId) throws SQLException {
+        String sql = "SELECT aluno, ra, cr FROM vw_cr_aluno WHERE id_aluno = ?";
+
+        try (Connection connection = DatabaseConfig.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, alunoId);
+
+            try (ResultSet rows = statement.executeQuery()) {
+                if (!rows.next()) {
+                    return null;
+                }
+                return new CrAluno(rows.getString("aluno"),
+                        rows.getString("ra"), rows.getBigDecimal("cr"));
+            }
+        }
+    }
+
+    /**
+     * Auditoria de notas (RN08), da alteração mais recente para a mais antiga,
+     * limitada a 500 linhas. A primeira linha é o cabeçalho.
+     */
+    public List<String[]> consultarAuditoriaNotas() throws SQLException {
+        String sql = "SELECT * FROM vw_log_nota "
+                + "ORDER BY data_hora DESC, id_log DESC LIMIT 500";
+
+        try (Connection connection = DatabaseConfig.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rows = statement.executeQuery()) {
+
+            return readRows(rows);
         }
     }
 
@@ -153,7 +193,27 @@ public final class SgaRepository {
         }
     }
 
-    public void fecharSemestre(String semestre, int usuarioId)
+    /** Matrículas de uma turma (vw_boletim), ordenadas pelo nome do aluno. */
+    public List<String[]> boletimDaTurma(int turmaId) throws SQLException {
+        String sql = "SELECT * FROM vw_boletim "
+                + "WHERE id_turma = ? ORDER BY aluno";
+
+        try (Connection connection = DatabaseConfig.openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, turmaId);
+
+            try (ResultSet rows = statement.executeQuery()) {
+                return readRows(rows);
+            }
+        }
+    }
+
+    /**
+     * Fecha o semestre e devolve o resumo de matrículas por situação
+     * (primeira linha = cabeçalho), como a procedure retorna.
+     */
+    public List<String[]> fecharSemestre(String semestre, int usuarioId)
             throws SQLException {
 
         try (Connection connection = DatabaseConfig.openConnection();
@@ -163,7 +223,23 @@ public final class SgaRepository {
             call.setString(1, semestre);
             call.setInt(2, usuarioId);
 
-            call.execute();
+            boolean hasResult = call.execute();
+
+            while (true) {
+                if (hasResult) {
+                    try (ResultSet rows = call.getResultSet()) {
+                        if (rows != null) {
+                            return readRows(rows);
+                        }
+                    }
+                } else if (call.getUpdateCount() == -1) {
+                    break;
+                }
+
+                hasResult = call.getMoreResults();
+            }
+
+            return List.of();
         }
     }
 

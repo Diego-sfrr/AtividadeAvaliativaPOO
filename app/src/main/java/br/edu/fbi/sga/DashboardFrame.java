@@ -1,6 +1,10 @@
 
 package br.edu.fbi.sga;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
+import javax.swing.SwingConstants;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -9,13 +13,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Insets;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("serial")
@@ -24,11 +31,13 @@ public final class DashboardFrame extends JFrame {
     private final Usuario usuario;
     private final SgaRepository repository;
 
-    private final JPanel actions =
-            new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private final JPanel sidebar = new JPanel();
 
     private final JPanel content =
             new JPanel(new BorderLayout());
+
+    private final JLabel tituloLabel = new JLabel(" ");
+    private final JLabel subtituloLabel = new JLabel(" ");
 
     public DashboardFrame(Usuario usuario, SgaRepository repository) {
         super("SGA | Painel");
@@ -37,51 +46,165 @@ public final class DashboardFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 620);
+        // Tamanho que cabe o menu inteiro (11 botões) e as tabelas largas, sem passar da tela
+        java.awt.Dimension tela = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        setSize(Math.min(1320, tela.width - 40), Math.min(800, tela.height - 40));
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        add(new JLabel("  Olá, " + usuario.nome()
-                + " | Perfil: " + usuario.perfil()), BorderLayout.NORTH);
+        montarMenuLateral();
 
-        add(actions, BorderLayout.SOUTH);
-        add(content, BorderLayout.CENTER);
+        // Cabeçalho com o título da seção atual
+        tituloLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        tituloLabel.setForeground(Tema.TEXTO);
+        subtituloLabel.setForeground(Tema.TEXTO_SUAVE);
 
-        addButton("Turmas", () ->
-                showView("vw_turmas_lotacao"));
+        JPanel textos = new JPanel(new BorderLayout(0, 2));
+        textos.setOpaque(false);
+        textos.add(tituloLabel, BorderLayout.NORTH);
+        textos.add(subtituloLabel, BorderLayout.SOUTH);
 
+        JPanel cabecalho = new JPanel(new BorderLayout());
+        cabecalho.setBackground(Color.WHITE);
+        cabecalho.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Tema.BORDA),
+                BorderFactory.createEmptyBorder(16, 28, 16, 28)));
+        cabecalho.add(textos, BorderLayout.CENTER);
+
+        content.setBackground(Tema.FUNDO);
+        content.setBorder(BorderFactory.createEmptyBorder(20, 24, 24, 24));
+
+        JPanel direita = new JPanel(new BorderLayout());
+        direita.add(cabecalho, BorderLayout.NORTH);
+        direita.add(content, BorderLayout.CENTER);
+
+        add(sidebar, BorderLayout.WEST);
+        add(direita, BorderLayout.CENTER);
+
+        // Menu por perfil
+        addButton("Início", this::showInicio);
+
+        addSection("CONSULTAS");
+        addButton("Turmas", () -> {
+            titulo("Turmas", "Vagas, matriculados e ocupação de cada turma");
+            showView("vw_turmas_lotacao");
+        });
         addButton("Boletim", this::showBoletim);
-        addButton("Matricular", this::enrollStudent);
         addButton("Histórico", this::showHistory);
 
-        // Funcionalidades do Secretário
-        if (usuario.isSecretario()) {
+        addSection("SECRETARIA");
+        addButton("Matricular", this::enrollStudent);
+
+        // Secretário e Coordenador (acesso total) gerenciam alunos
+        if (usuario.isSecretario() || usuario.isCoordenador()) {
             addButton("Alunos", this::showAlunos);
         }
 
-        // Funcionalidades do Coordenador
+        // Funcionalidades exclusivas do Coordenador
         if (usuario.isCoordenador()) {
-
-            addButton("Desempenho", () ->
-                    showView("vw_desempenho_turma"));
-
-            addButton("Faturamento", () ->
-                    showView("vw_faturamento_curso"));
-
-            addButton("Lançar notas", this::launchGrades);
-            addButton("Lançar exame", this::launchExam);
+            addSection("COORDENAÇÃO");
+            addButton("Notas e exame", this::showNotas);
             addButton("Fechar semestre", this::closeSemester);
+            addButton("Relatórios", this::showRelatorios);
+            addButton("Auditoria", this::showAuditoria);
         }
 
+        sidebar.add(Box.createVerticalGlue());
         addButton("Sair", () -> {
             new LoginFrame().setVisible(true);
             dispose();
         });
+
+        // Tela inicial
+        showInicio();
+    }
+
+    /** Painel inicial: cartões e gráfico. O faturamento só aparece para o Coordenador. */
+    private void showInicio() {
+        try {
+            InicioPanel inicio = new InicioPanel(repository, usuario.isCoordenador());
+
+            titulo("Início", "Visão geral das turmas, dos alunos e do desempenho");
+
+            content.removeAll();
+            content.add(inicio, BorderLayout.CENTER);
+            content.revalidate();
+            content.repaint();
+
+        } catch (SQLException exception) {
+            showError(exception);
+        }
+    }
+
+    private void montarMenuLateral() {
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setBackground(Tema.MARINHO);
+        sidebar.setPreferredSize(new Dimension(240, 0));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(18, 14, 12, 14));
+
+        JLabel marca = new JLabel("SGA");
+        marca.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        marca.setForeground(Color.WHITE);
+        marca.setAlignmentX(LEFT_ALIGNMENT);
+        marca.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        JLabel faculdade = new JLabel("Gestão Acadêmica");
+        faculdade.setForeground(new Color(0x94A3B8));
+        faculdade.setFont(faculdade.getFont().deriveFont(12f));
+        faculdade.setAlignmentX(LEFT_ALIGNMENT);
+        faculdade.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        // Cartão do usuário logado
+        JLabel nome = new JLabel(usuario.nome());
+        nome.setForeground(Color.WHITE);
+        nome.setFont(nome.getFont().deriveFont(Font.BOLD, 14f));
+
+        JLabel perfil = new JLabel(usuario.perfil().toUpperCase());
+        perfil.setForeground(usuario.isCoordenador()
+                ? new Color(0x93C5FD) : new Color(0x86EFAC));
+        perfil.setFont(perfil.getFont().deriveFont(Font.BOLD, 11f));
+
+        JPanel cartao = new JPanel(new BorderLayout(0, 3));
+        cartao.setBackground(Tema.MARINHO_CLARO);
+        cartao.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+        cartao.add(nome, BorderLayout.NORTH);
+        cartao.add(perfil, BorderLayout.SOUTH);
+        cartao.setAlignmentX(LEFT_ALIGNMENT);
+        cartao.setMaximumSize(new Dimension(Integer.MAX_VALUE, 62));
+
+        sidebar.add(marca);
+        sidebar.add(faculdade);
+        sidebar.add(Box.createVerticalStrut(14));
+        sidebar.add(cartao);
+        sidebar.add(Box.createVerticalStrut(10));
+    }
+
+    private void addSection(String texto) {
+        JLabel secao = new JLabel(texto);
+        secao.setForeground(new Color(0x64748B));
+        secao.setFont(secao.getFont().deriveFont(Font.BOLD, 11f));
+        secao.setAlignmentX(LEFT_ALIGNMENT);
+        secao.setBorder(BorderFactory.createEmptyBorder(12, 10, 4, 0));
+        sidebar.add(secao);
     }
 
     private void addButton(String label, Runnable action) {
         JButton button = new JButton(label);
+        button.putClientProperty("JButton.buttonType", "toolBarButton");
+        button.setForeground(new Color(0xE2E8F0));
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setFont(button.getFont().deriveFont(14f));
+        button.setMargin(new Insets(4, 12, 4, 12));
+        button.setFocusable(false);
+        button.setAlignmentX(LEFT_ALIGNMENT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         button.addActionListener(event -> action.run());
-        actions.add(button);
+        sidebar.add(button);
+    }
+
+    private void titulo(String titulo, String subtitulo) {
+        tituloLabel.setText(titulo);
+        subtituloLabel.setText(subtitulo);
     }
 
     // ==========================================
@@ -118,8 +241,13 @@ public final class DashboardFrame extends JFrame {
         }
 
         try {
-            showRows(repository.historicoAluno(
-                    Integer.parseInt(value.trim())));
+            int alunoId = Integer.parseInt(value.trim());
+
+            List<String[]> historico = repository.historicoAluno(alunoId);
+
+            titulo("Histórico do aluno " + alunoId,
+                    "Todas as disciplinas cursadas, por semestre");
+            showRows(historico, cartaoCr(alunoId));
 
         } catch (NumberFormatException exception) {
             JOptionPane.showMessageDialog(
@@ -140,7 +268,12 @@ public final class DashboardFrame extends JFrame {
             int alunoId = askInt(
                     "ID do aluno para consultar o boletim:");
 
-            showRows(repository.consultarBoletimAluno(alunoId));
+            List<String[]> boletim =
+                    repository.consultarBoletimAluno(alunoId);
+
+            titulo("Boletim do aluno " + alunoId,
+                    "Notas, faltas, frequência e situação por disciplina");
+            showRows(boletim, cartaoCr(alunoId));
 
         } catch (CancelledInput ignored) {
         } catch (NumberFormatException exception) {
@@ -377,80 +510,135 @@ public final class DashboardFrame extends JFrame {
     }
 
     // ==========================================
-    // NOTAS E EXAME
+    // TELAS DO COORDENADOR
     // ==========================================
 
-    private void launchGrades() {
-
-        try {
-            int id = askInt("ID da matrícula:");
-            double n1 = askDouble("Nota N1 (0 a 10):");
-            double n2 = askDouble("Nota N2 (0 a 10):");
-            int faltas = askInt("Quantidade de faltas:");
-
-            repository.lancarNotas(
-                    id, n1, n2, faltas, usuario.id());
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Notas enviadas ao banco."
-            );
-
-        } catch (CancelledInput ignored) {
-        } catch (Exception exception) {
-            showError(exception);
-        }
+    private void showNotas() {
+        new NotasFrame(repository, usuario.id()).setVisible(true);
     }
 
-    private void launchExam() {
-
-        try {
-            int id = askInt("ID da matrícula:");
-            double grade = askDouble("Nota do exame (0 a 10):");
-
-            repository.lancarExame(
-                    id, grade, usuario.id());
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Nota do exame enviada ao banco."
-            );
-
-        } catch (CancelledInput ignored) {
-        } catch (Exception exception) {
-            showError(exception);
-        }
+    private void showRelatorios() {
+        new RelatoriosFrame(repository).setVisible(true);
     }
 
-    // ==========================================
-    // FECHAMENTO DO SEMESTRE
-    // ==========================================
+    private void showAuditoria() {
+        new AuditoriaFrame(repository).setVisible(true);
+    }
 
     private void closeSemester() {
 
-        String semester = JOptionPane.showInputDialog(
+        List<String> semestres;
+
+        try {
+            semestres = semestresAbertos();
+        } catch (SQLException exception) {
+            showError(exception);
+            return;
+        }
+
+        if (semestres.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Não há turmas abertas para fechar.",
+                    "Fechar semestre",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        JComboBox<String> combo =
+                new JComboBox<>(semestres.toArray(new String[0]));
+
+        JPanel painel = new JPanel(new GridLayout(0, 1, 6, 6));
+        painel.add(new JLabel("Semestre com turmas abertas:"));
+        painel.add(combo);
+
+        int escolha = JOptionPane.showConfirmDialog(
                 this,
-                "Semestre (ex.: 2026.2):",
+                painel,
                 "Fechar semestre",
-                JOptionPane.QUESTION_MESSAGE
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
         );
 
-        if (semester == null || semester.isBlank()) {
+        if (escolha != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String semestre = (String) combo.getSelectedItem();
+
+        int confirmar = JOptionPane.showConfirmDialog(
+                this,
+                "Fechar o semestre " + semestre + "?\n\n"
+                + "As turmas serão encerradas e as notas não poderão\n"
+                + "mais ser alteradas. Matrículas Em Exame sem exame\n"
+                + "ficam como Reprovado por Nota.",
+                "Confirmar fechamento",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmar != JOptionPane.YES_OPTION) {
             return;
         }
 
         try {
-            repository.fecharSemestre(
-                    semester.trim(), usuario.id());
+            List<String[]> resumo =
+                    repository.fecharSemestre(semestre, usuario.id());
+
+            JPanel resultado = new JPanel(new BorderLayout(6, 6));
+            resultado.add(new JLabel("Semestre " + semestre
+                    + " fechado. Matrículas por situação:"),
+                    BorderLayout.NORTH);
+
+            if (resumo.size() > 1) {
+                JTable resumoTabela = Tabelas.tabela(resumo);
+                JScrollPane scroll = new JScrollPane(resumoTabela);
+                // altura real da tabela (cabeçalho + linhas) para não cortar nem rolar
+                int altura = resumoTabela.getPreferredSize().height
+                        + resumoTabela.getTableHeader().getPreferredSize().height + 8;
+                scroll.setPreferredSize(new Dimension(380, Math.min(300, altura)));
+                resultado.add(scroll, BorderLayout.CENTER);
+            }
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Solicitação de fechamento concluída."
+                    resultado,
+                    "Fechar semestre",
+                    JOptionPane.INFORMATION_MESSAGE
             );
+
+            showView("vw_turmas_lotacao");
 
         } catch (SQLException exception) {
             showError(exception);
         }
+    }
+
+    /** Semestres que ainda têm alguma turma com status Aberta. */
+    private List<String> semestresAbertos() throws SQLException {
+
+        List<String[]> turmas =
+                repository.consultarView("vw_turmas_lotacao");
+
+        List<String> semestres = new ArrayList<>();
+
+        if (turmas.size() > 1) {
+            int idxSemestre = findColumn(turmas.get(0), "semestre");
+            int idxStatus = findColumn(turmas.get(0), "status");
+
+            for (int i = 1; i < turmas.size(); i++) {
+                String[] linha = turmas.get(i);
+                String semestre = cell(linha, idxSemestre);
+
+                if ("Aberta".equalsIgnoreCase(cell(linha, idxStatus))
+                        && !semestres.contains(semestre)) {
+                    semestres.add(semestre);
+                }
+            }
+        }
+
+        return semestres;
     }
 
     // ==========================================
@@ -468,57 +656,51 @@ public final class DashboardFrame extends JFrame {
         return Integer.parseInt(value.trim());
     }
 
-    private double askDouble(String prompt) throws CancelledInput {
-
-        String value = JOptionPane.showInputDialog(this, prompt);
-
-        if (value == null) {
-            throw new CancelledInput();
-        }
-
-        return Double.parseDouble(
-                value.trim().replace(',', '.'));
-    }
-
     // ==========================================
     // EXIBIÇÃO DAS CONSULTAS
     // ==========================================
 
     private void showRows(List<String[]> rows) {
+        showRows(rows, null);
+    }
+
+    /** CR do aluno em destaque (vw_cr_aluno); null se o aluno não existe. */
+    private JPanel cartaoCr(int alunoId) throws SQLException {
+        SgaRepository.CrAluno cr = repository.consultarCr(alunoId);
+        return cr == null ? null : Cartoes.cr(cr);
+    }
+
+    /** Mostra a tabela; {@code topo} (opcional) aparece acima, como o cartão do CR. */
+    private void showRows(List<String[]> rows, JPanel topo) {
 
         content.removeAll();
 
         if (rows.isEmpty() || rows.size() == 1) {
 
-            content.add(
-                    new JLabel("Nenhum registro retornado."),
-                    BorderLayout.NORTH
-            );
+            JLabel vazio = new JLabel("Nenhum registro retornado.");
+            vazio.setForeground(Tema.TEXTO_SUAVE);
+
+            JPanel alto = new JPanel(new BorderLayout());
+            alto.setOpaque(false);
+            if (topo != null) {
+                alto.add(topo, BorderLayout.NORTH);
+            }
+            alto.add(vazio, BorderLayout.CENTER);
+            content.add(alto, BorderLayout.NORTH);
 
         } else {
 
-            String[] headers = rows.get(0);
+            if (topo != null) {
+                content.add(topo, BorderLayout.NORTH);
+            }
 
-            Object[][] data = rows.subList(1, rows.size())
-                    .stream()
-                    .map(row -> (Object[]) row)
-                    .toArray(Object[][]::new);
+            JTable table = Tabelas.tabela(rows);
 
-            JTable table = new JTable(
-                    new DefaultTableModel(data, headers) {
+            JScrollPane scroll = new JScrollPane(table);
+            scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDA));
+            scroll.getViewport().setBackground(Color.WHITE);
 
-                        @Override
-                        public boolean isCellEditable(
-                                int row, int column) {
-                            return false;
-                        }
-                    }
-            );
-
-            content.add(
-                    new JScrollPane(table),
-                    BorderLayout.CENTER
-            );
+            content.add(scroll, BorderLayout.CENTER);
         }
 
         content.revalidate();
