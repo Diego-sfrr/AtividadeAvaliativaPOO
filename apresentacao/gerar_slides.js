@@ -1,5 +1,5 @@
 // ============================================================
-// SGA - Faculdade do Bug Infinito (FBI)
+// SGA - Sistema de Gestão Acadêmica
 // gerar_slides.js: gera apresentacao/SGA_apresentacao.pptx
 // Responsável: Diego
 // ============================================================
@@ -45,7 +45,7 @@ pres.defineSlideMaster({
   title: 'CONTEUDO',
   background: { color: COR.branco },
   objects: [
-    { text: { text: 'SGA · Faculdade do Bug Infinito · LBD',
+    { text: { text: 'SGA · Sistema de Gestão Acadêmica · LBD',
               options: { x: 0.5, y: 5.2, w: 6, h: 0.3, fontFace: FONTE, fontSize: 10, color: COR.suave, margin: 0 } } },
   ],
   slideNumber: { x: 9.0, y: 5.2, w: 0.5, h: 0.3, fontFace: FONTE, fontSize: 10, color: COR.suave, align: 'right' },
@@ -120,7 +120,7 @@ function aPreencher(nome, tituloSlide, topicos) {
   const s = pres.addSlide({ masterName: 'ESCURO' });
   etiqueta(s, 'USE sga_fbi;', 0.5, 1.2, 1.8, true);
   s.addText('SGA', { x: 0.5, y: 1.7, w: 9, h: 1.1, fontFace: FONTE, fontSize: 72, bold: true, color: COR.branco, margin: 0, isTextBox: true });
-  s.addText('Sistema de Gestão Acadêmica da Faculdade do Bug Infinito',
+  s.addText('Sistema de Gestão Acadêmica',
     { x: 0.5, y: 2.85, w: 9, h: 0.5, fontFace: FONTE, fontSize: 22, color: COR.claro, margin: 0, isTextBox: true });
   s.addText('Trabalho Prático Integrado · Laboratório de Banco de Dados · 23/11/2026',
     { x: 0.5, y: 3.45, w: 9, h: 0.4, fontFace: FONTE, fontSize: 14, color: COR.claro, margin: 0, isTextBox: true });
@@ -181,8 +181,8 @@ const IMG = (...p) => path.join(__dirname, '..', 'relatorio', 'img', ...p);
 // G1. Modelagem e DDL
 {
   const s = pres.addSlide({ masterName: 'CONTEUDO' });
-  titulo(s, 'Nove tabelas na 3FN, com as regras no próprio DDL', 'guilherme');
-  s.addImage({ path: IMG('eer_sga_fbi.png'), x: 0.4, y: 1.2, w: 5.6, h: 5.6 / 1.513, sizing: { type: 'contain', w: 5.6, h: 3.7 } });
+  titulo(s, 'Nove tabelas na 3FN', 'guilherme');
+  s.addImage({ path: IMG('eer_sga_fbi.png'), x: 0.4, y: 1.15, w: 5.4, h: 5.4 / 1.513, sizing: { type: 'contain', w: 5.4, h: 3.57 } });
   const itens = [
     ['3FN', 'Dados de curso, disciplina e professor ficam nas próprias tabelas. Matrícula é a entidade do N:N aluno × turma.'],
     ['Constraints', 'PK, FK, UNIQUE e CHECK: notas de 0 a 10 (RN07) e textos com grafia exata (utf8mb4_bin).'],
@@ -196,14 +196,14 @@ const IMG = (...p) => path.join(__dirname, '..', 'relatorio', 'img', ...p);
     texto(s, it[1], 6.35, y + 0.33, 3.1, 0.5, { fontSize: 10.5, color: COR.texto });
   });
   texto(s, 'Os dados rodam depois dos triggers: se a massa estiver errada, o banco recusa.',
-    0.5, 4.65, 5.5, 0.4, { fontSize: 12, color: COR.suave });
+    0.5, 4.78, 5.5, 0.3, { fontSize: 11, color: COR.suave });
   s.addNotes('Diagrama gerado a partir do modelo (relatorio/img/eer_sga_fbi.png). Justificativa completa da 3FN na seção 3 do relatório, com a única redundância deliberada: media_final e situacao.');
 }
 
 // G2. Telas do Coordenador
 {
   const s = pres.addSlide({ masterName: 'CONTEUDO' });
-  titulo(s, 'Telas do Coordenador: notas, fechamento e relatórios', 'guilherme');
+  titulo(s, 'Telas do Coordenador', 'guilherme');
   const w = 4.4, h = w / 1.75;
   s.addImage({ path: IMG('telas', '36_coord_notas_apos_exame.png'), x: 0.5, y: 1.2, w, h, sizing: { type: 'contain', w, h } });
   s.addImage({ path: IMG('telas', '42_coord_rel_faturamento.png'), x: 5.1, y: 1.2, w, h, sizing: { type: 'contain', w, h } });
@@ -268,7 +268,7 @@ divisoria('Diego', 'diego', 'Regras de negócio dentro do banco');
     lin('Senão', "'Reprovado por Nota'", 'RN03'),
   ], {
     x: 0.5, y: 1.2, w: 9, colW: [4.1, 3.6, 1.3], rowH: 0.36,
-    border: { type: 'solid', color: 'D5E0E3', pt: 0.75 }, fill: { color: COR.branco }, valign: 'middle', margin: [0, 8, 0, 8],
+    border: { type: 'solid', color: 'D5E0E3', pt: 0.75 }, fill: { color: COR.branco }, valign: 'middle', margin: [0, 0.1, 0, 0.1],
   });
   texto(s, 'A falta vem primeiro: média 9,0 com 73,75% de presença é reprovação por falta. A média é arredondada antes da comparação, para a situação sempre bater com a nota do boletim.',
     0.5, 4.3, 9, 0.75, { fontSize: 13, color: COR.suave });
@@ -350,36 +350,154 @@ divisoria('Diego', 'diego', 'Regras de negócio dentro do banco');
 // ============================================================
 // Mykael e Leo (a preencher)
 // ============================================================
-divisoria('Mykael', 'mykael', 'Procedures e a prova de que tudo funciona');
-aPreencher('Mykael', 'Procedures, hash de senha e testes', [
-  'sp_LoginUsuario: SHA-256, nunca devolve a senha',
-  'sp_matricular_aluno: RN05, RN06 e RN09 com SIGNAL 45000',
-  'sp_lancar_notas e sp_lancar_exame',
-  'sp_fechar_semestre: cursor e transação, só Coordenador',
-  'Tabela dos testes: resultado esperado x obtido',
-  'Dificuldades técnicas e como foram resolvidas',
-]);
+// Tabela simples no estilo do deck
+function tabelaSimples(slide, cabecalho, linhas, o) {
+  const fs = o.fs || 11;
+  const cab = { bold: true, color: COR.branco, fill: { color: COR.escuro }, fontFace: FONTE, fontSize: fs };
+  const rows = [cabecalho.map((t, i) => ({ text: t, options: Object.assign({ align: o.centro && o.centro.includes(i) ? 'center' : 'left' }, cab) }))];
+  linhas.forEach((l) => rows.push(l.map((t, i) => ({
+    text: t,
+    options: {
+      fontFace: i === 0 && o.mono ? MONO : FONTE, fontSize: i === 0 && o.mono ? fs - 0.5 : fs,
+      bold: i === 0, color: i === 0 ? COR.escuro : COR.texto,
+      align: o.centro && o.centro.includes(i) ? 'center' : 'left',
+    },
+  }))));
+  slide.addTable(rows, {
+    x: o.x, y: o.y, w: o.w, colW: o.colW, rowH: o.rowH || 0.36,
+    border: { type: 'solid', color: 'D5E0E3', pt: 0.75 }, fill: { color: COR.branco }, valign: 'middle', margin: [0, 0.1, 0, 0.1],
+  });
+}
 
+function marcadores(slide, itens, x, y, w, h, fs) {
+  slide.addText(itens.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < itens.length - 1 } })), {
+    x, y, w, h, fontFace: FONTE, fontSize: fs || 13, color: COR.texto, margin: 0, valign: 'top',
+    paraSpaceAfter: 5, isTextBox: true,
+  });
+}
+
+// ============================================================
+// Mykael
+// ============================================================
+divisoria('Mykael', 'mykael', 'Procedures e a prova de que tudo funciona');
+
+// M1. As seis procedures
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Seis procedures, uma porta de entrada', 'mykael');
+  tabelaSimples(s, ['Procedure', 'O que faz', 'Regras'], [
+    ['sp_LoginUsuario', 'Confere login e hash; devolve id, nome, e-mail e perfil. Nunca devolve a senha', 'Vazio se não conferir'],
+    ['sp_matricular_aluno', 'Cria a matrícula depois de checar aluno ativo, turma aberta e pré-requisito', 'RN05, RN06, RN09'],
+    ['sp_lancar_notas', 'Grava N1, N2 e faltas; o trigger calcula média e situação', 'RN07, RN08; só Coordenador'],
+    ['sp_lancar_exame', 'Grava o exame, só se a matrícula está Em Exame', 'RN03; só Coordenador'],
+    ['sp_historico_aluno', 'Todas as disciplinas do aluno, ordenadas por semestre', 'Aluno inexistente dá erro'],
+    ['sp_fechar_semestre', 'Percorre as matrículas com um cursor, dentro de uma transação, e encerra as turmas', 'Tudo ou nada; só Coordenador'],
+  ], { x: 0.5, y: 1.2, w: 9, colW: [2.2, 4.5, 2.3], rowH: 0.46, fs: 10.5, mono: true });
+  texto(s, 'Regra quebrada vira SIGNAL SQLSTATE 45000 com uma mensagem legível. A tela só mostra essa mensagem.',
+    0.5, 4.68, 9, 0.35, { fontSize: 12, color: COR.suave });
+  s.addNotes('As procedures não calculam média nem situação: só gravam n1, n2, exame e faltas. O trigger trg_atualiza_situacao faz o resto, então a regra existe em um lugar só.');
+}
+
+// M2. Hash, perfis e testes
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Hash de senha e 35 testes', 'mykael');
+  cartao(s, 0.5, 1.2, 4.4, 3.75);
+  texto(s, 'Senha e perfis', 0.7, 1.32, 4, 0.3, { fontFace: MONO, fontSize: 13, bold: true, color: COR.escuro });
+  marcadores(s, [
+    'SHA-256 em hexadecimal, guardado em CHAR(64)',
+    'O app calcula o hash; o banco só compara',
+    'A resposta não diz se errou o login ou a senha',
+    'O perfil é conferido no banco: Secretário não lança nota nem fecha semestre, mesmo chamando a procedure direto',
+  ], 0.7, 1.72, 4.0, 2.2, 12);
+  texto(s, 'Dificuldade: testes que devem falhar paravam o script. A sp_teste_erro captura a mensagem e segue.',
+    0.7, 4.0, 4.0, 0.85, { fontSize: 11, color: COR.suave });
+  cartao(s, 5.1, 1.2, 4.4, 3.75);
+  texto(s, '04_testes.sql', 5.3, 1.32, 4, 0.3, { fontFace: MONO, fontSize: 13, bold: true, color: COR.escuro });
+  s.addText('35 de 35', { x: 5.3, y: 1.7, w: 4.0, h: 0.7, fontFace: FONTE, fontSize: 40, bold: true, color: '1F7A3E', margin: 0, isTextBox: true });
+  texto(s, 'verificações OK, 0 falhas', 5.3, 2.4, 4.0, 0.3, { fontSize: 13, color: COR.suave });
+  marcadores(s, [
+    'Login errado devolve vazio',
+    'Turma lotada, sem pré-requisito, aluno trancado ou formado',
+    'Nota fora de 0 a 10 é recusada',
+    'Em Exame, média 9 com muitas faltas, log de notas',
+    'Secretário fechando o semestre é barrado',
+  ], 5.3, 2.85, 4.0, 2.0, 11.5);
+  s.addNotes('A tabela esperado x obtido sai na execução do 04_testes.sql. Está no relatório, seção 7.');
+}
+
+// ============================================================
+// Leo
+// ============================================================
 divisoria('Leo', 'leo', 'A cara do sistema');
-aPreencher('Leo', 'Interface, login e controle de acesso', [
-  'Linguagem escolhida e estrutura do app',
-  'Login: hash gerado no app e chamada da sp_LoginUsuario',
-  'Menu por perfil: o que o Secretário não vê',
-  'Telas do Secretário: alunos, matrícula, boletim, histórico e turmas',
-  'Só CALL e SELECT em view, sempre com parâmetros',
-  'Dificuldades técnicas e como foram resolvidas',
-]);
+
+// L1. Arquitetura da interface
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'A interface não tem regra de negócio', 'leo');
+  tabelaSimples(s, ['Classe', 'Papel'], [
+    ['LoginFrame', 'Gera o hash e chama sp_LoginUsuario'],
+    ['DashboardFrame', 'Menu lateral por perfil, consultas e matrícula'],
+    ['AlunosFrame', 'Cadastrar, editar e excluir alunos'],
+    ['SgaRepository', 'Única classe que fala com o banco'],
+    ['DatabaseConfig', 'Conexão a partir de variáveis de ambiente'],
+    ['PasswordHash', 'Calcula o SHA-256 da senha'],
+  ], { x: 0.5, y: 1.2, w: 4.9, colW: [1.7, 3.2], rowH: 0.5, fs: 10.5, mono: true });
+  cartao(s, 5.6, 1.2, 3.9, 3.75);
+  texto(s, 'Regras de ouro', 5.8, 1.32, 3.5, 0.3, { fontFace: MONO, fontSize: 13, bold: true, color: COR.escuro });
+  marcadores(s, [
+    'Só CALL e SELECT em view; nenhum INSERT, UPDATE ou DELETE',
+    'Valores sempre como parâmetros, nunca concatenados',
+    'Lista de views permitidas',
+    'A senha do MySQL fica em variável de ambiente, fora do Git',
+    'Colunas lidas pelo nome, não pela posição',
+  ], 5.8, 1.72, 3.5, 3.1, 12);
+  s.addNotes('Java 17, Swing, JDBC e Maven. A aparência usa a biblioteca FlatLaf.');
+}
+
+// L2. Login e perfis
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Login com hash e menu por perfil', 'leo');
+  s.addImage({ path: IMG('telas', '01_login.png'), x: 0.5, y: 1.2, w: 2.5, h: 2.9, sizing: { type: 'contain', w: 2.5, h: 2.9 } });
+  tabelaSimples(s, ['Função', 'Secretário', 'Coordenador'], [
+    ['Turmas, boletim e histórico', 'sim', 'sim'],
+    ['Alunos e matrícula', 'sim', 'sim'],
+    ['Notas e exame', 'não', 'sim'],
+    ['Fechar semestre', 'não', 'sim'],
+    ['Relatórios e auditoria', 'não', 'sim'],
+  ], { x: 3.3, y: 1.2, w: 6.2, colW: [3.2, 1.5, 1.5], rowH: 0.38, fs: 11.5, centro: [1, 2] });
+  texto(s, 'Duas camadas: a tela esconde o que o perfil não pode usar, e o banco recusa a operação mesmo se alguém chamar a procedure direto.',
+    3.3, 3.75, 6.2, 0.7, { fontSize: 13, color: COR.texto });
+  texto(s, 'A senha digitada vira SHA-256 no app e só o hash segue para o banco.',
+    0.5, 4.4, 9, 0.4, { fontSize: 12, color: COR.suave });
+  s.addNotes('O login inválido mostra apenas "Login ou senha inválidos", sem dizer qual campo errou.');
+}
 
 // ============================================================
 // Encerramento
 // ============================================================
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Roteiro da demonstração', 'grupo');
+  tabelaSimples(s, ['#', 'Quem entra', 'O que mostrar'], [
+    ['1', 'coord.ana, senha errada', 'Login recusado: "Login ou senha inválidos."'],
+    ['2', 'sec.carla', 'Menu sem coordenação e painel sem faturamento'],
+    ['3', 'sec.carla', 'Matricular Rafael Domingues em Estruturas de Dados: o banco recusa (pré-requisito)'],
+    ['4', 'sec.carla', 'Matricular Queila Macedo em Banco de Dados: matrícula realizada'],
+    ['5', 'coord.ana', 'Lançar notas do Daniel Pacheco e o exame do Bernardo Cavalcante'],
+    ['6', 'coord.ana', 'Auditoria mostra as linhas geradas pelo trigger; fechar semestre'],
+  ], { x: 0.5, y: 1.2, w: 9, colW: [0.5, 2.5, 6.0], rowH: 0.46, fs: 11.5, centro: [0] });
+  texto(s, 'Todas as senhas de teste são Senha@123. O fechamento é recusado enquanto houver matrícula sem N1 ou N2.',
+    0.5, 4.7, 9, 0.35, { fontSize: 11.5, color: COR.suave });
+  s.addNotes('Banco recém-criado com o SGA_completo.sql. Quem faz cada passo é combinado no ensaio.');
+}
 {
   const s = pres.addSlide({ masterName: 'ESCURO' });
   etiqueta(s, 'CALL sp_demonstracao();', 0.5, 1.6, 3.0, true);
   s.addText('Demonstração', { x: 0.5, y: 2.1, w: 9, h: 0.9, fontFace: FONTE, fontSize: 44, bold: true, color: COR.branco, margin: 0, isTextBox: true });
   s.addText('Login com cada perfil, matrícula barrada pelo banco, lançamento de notas e auditoria.',
     { x: 0.5, y: 3.05, w: 9, h: 0.6, fontFace: FONTE, fontSize: 18, color: COR.claro, margin: 0, isTextBox: true });
-  s.addNotes('Roteiro sugerido da demo. Ajustar quando a interface estiver integrada.');
 }
 
 pres.writeFile({ fileName: path.join(__dirname, 'SGA_apresentacao.pptx') })
