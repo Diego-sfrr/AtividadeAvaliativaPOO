@@ -35,9 +35,9 @@ final class Tema {
     static final Color TEXTO = new Color(0x0F172A);
     static final Color TEXTO_SUAVE = new Color(0x64748B);
 
-    private static final Color VERDE = new Color(0x15803D);
-    private static final Color VERMELHO = new Color(0xB91C1C);
-    private static final Color LARANJA = new Color(0xB45309);
+    static final Color VERDE = new Color(0x15803D);
+    static final Color VERMELHO = new Color(0xB91C1C);
+    static final Color LARANJA = new Color(0xB45309);
 
     private Tema() { }
 
