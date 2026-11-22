@@ -46,7 +46,9 @@ public final class DashboardFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1320, 740);
+        // Tamanho que cabe o menu inteiro (11 botões) e as tabelas largas, sem passar da tela
+        java.awt.Dimension tela = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        setSize(Math.min(1320, tela.width - 40), Math.min(800, tela.height - 40));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -80,6 +82,8 @@ public final class DashboardFrame extends JFrame {
         add(direita, BorderLayout.CENTER);
 
         // Menu por perfil
+        addButton("Início", this::showInicio);
+
         addSection("CONSULTAS");
         addButton("Turmas", () -> {
             titulo("Turmas", "Vagas, matriculados e ocupação de cada turma");
@@ -102,6 +106,7 @@ public final class DashboardFrame extends JFrame {
             addButton("Notas e exame", this::showNotas);
             addButton("Fechar semestre", this::closeSemester);
             addButton("Relatórios", this::showRelatorios);
+            addButton("Auditoria", this::showAuditoria);
         }
 
         sidebar.add(Box.createVerticalGlue());
@@ -111,15 +116,31 @@ public final class DashboardFrame extends JFrame {
         });
 
         // Tela inicial
-        titulo("Turmas", "Vagas, matriculados e ocupação de cada turma");
-        showView("vw_turmas_lotacao");
+        showInicio();
+    }
+
+    /** Painel inicial: cartões e gráfico. O faturamento só aparece para o Coordenador. */
+    private void showInicio() {
+        try {
+            InicioPanel inicio = new InicioPanel(repository, usuario.isCoordenador());
+
+            titulo("Início", "Visão geral das turmas, dos alunos e do desempenho");
+
+            content.removeAll();
+            content.add(inicio, BorderLayout.CENTER);
+            content.revalidate();
+            content.repaint();
+
+        } catch (SQLException exception) {
+            showError(exception);
+        }
     }
 
     private void montarMenuLateral() {
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(Tema.MARINHO);
         sidebar.setPreferredSize(new Dimension(240, 0));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(24, 14, 18, 14));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(18, 14, 12, 14));
 
         JLabel marca = new JLabel("SGA");
         marca.setFont(new Font("Segoe UI", Font.BOLD, 28));
@@ -153,7 +174,7 @@ public final class DashboardFrame extends JFrame {
 
         sidebar.add(marca);
         sidebar.add(faculdade);
-        sidebar.add(Box.createVerticalStrut(22));
+        sidebar.add(Box.createVerticalStrut(14));
         sidebar.add(cartao);
         sidebar.add(Box.createVerticalStrut(10));
     }
@@ -163,7 +184,7 @@ public final class DashboardFrame extends JFrame {
         secao.setForeground(new Color(0x64748B));
         secao.setFont(secao.getFont().deriveFont(Font.BOLD, 11f));
         secao.setAlignmentX(LEFT_ALIGNMENT);
-        secao.setBorder(BorderFactory.createEmptyBorder(16, 10, 6, 0));
+        secao.setBorder(BorderFactory.createEmptyBorder(12, 10, 4, 0));
         sidebar.add(secao);
     }
 
@@ -173,10 +194,10 @@ public final class DashboardFrame extends JFrame {
         button.setForeground(new Color(0xE2E8F0));
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setFont(button.getFont().deriveFont(14f));
-        button.setMargin(new Insets(9, 12, 9, 12));
+        button.setMargin(new Insets(4, 12, 4, 12));
         button.setFocusable(false);
         button.setAlignmentX(LEFT_ALIGNMENT);
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         button.addActionListener(event -> action.run());
         sidebar.add(button);
     }
@@ -226,7 +247,7 @@ public final class DashboardFrame extends JFrame {
 
             titulo("Histórico do aluno " + alunoId,
                     "Todas as disciplinas cursadas, por semestre");
-            showRows(historico);
+            showRows(historico, cartaoCr(alunoId));
 
         } catch (NumberFormatException exception) {
             JOptionPane.showMessageDialog(
@@ -252,7 +273,7 @@ public final class DashboardFrame extends JFrame {
 
             titulo("Boletim do aluno " + alunoId,
                     "Notas, faltas, frequência e situação por disciplina");
-            showRows(boletim);
+            showRows(boletim, cartaoCr(alunoId));
 
         } catch (CancelledInput ignored) {
         } catch (NumberFormatException exception) {
@@ -500,6 +521,10 @@ public final class DashboardFrame extends JFrame {
         new RelatoriosFrame(repository).setVisible(true);
     }
 
+    private void showAuditoria() {
+        new AuditoriaFrame(repository).setVisible(true);
+    }
+
     private void closeSemester() {
 
         List<String> semestres;
@@ -569,7 +594,9 @@ public final class DashboardFrame extends JFrame {
             if (resumo.size() > 1) {
                 JScrollPane scroll =
                         new JScrollPane(Tabelas.tabela(resumo));
-                scroll.setPreferredSize(new Dimension(380, 140));
+                // cabeçalho 38 + 33 por linha + folga, para não cortar nem rolar
+                scroll.setPreferredSize(new Dimension(380,
+                        Math.min(260, 50 + 33 * (resumo.size() - 1))));
                 resultado.add(scroll, BorderLayout.CENTER);
             }
 
@@ -633,6 +660,17 @@ public final class DashboardFrame extends JFrame {
     // ==========================================
 
     private void showRows(List<String[]> rows) {
+        showRows(rows, null);
+    }
+
+    /** CR do aluno em destaque (vw_cr_aluno); null se o aluno não existe. */
+    private JPanel cartaoCr(int alunoId) throws SQLException {
+        SgaRepository.CrAluno cr = repository.consultarCr(alunoId);
+        return cr == null ? null : Cartoes.cr(cr);
+    }
+
+    /** Mostra a tabela; {@code topo} (opcional) aparece acima, como o cartão do CR. */
+    private void showRows(List<String[]> rows, JPanel topo) {
 
         content.removeAll();
 
@@ -640,9 +678,20 @@ public final class DashboardFrame extends JFrame {
 
             JLabel vazio = new JLabel("Nenhum registro retornado.");
             vazio.setForeground(Tema.TEXTO_SUAVE);
-            content.add(vazio, BorderLayout.NORTH);
+
+            JPanel alto = new JPanel(new BorderLayout());
+            alto.setOpaque(false);
+            if (topo != null) {
+                alto.add(topo, BorderLayout.NORTH);
+            }
+            alto.add(vazio, BorderLayout.CENTER);
+            content.add(alto, BorderLayout.NORTH);
 
         } else {
+
+            if (topo != null) {
+                content.add(topo, BorderLayout.NORTH);
+            }
 
             JTable table = Tabelas.tabela(rows);
 
