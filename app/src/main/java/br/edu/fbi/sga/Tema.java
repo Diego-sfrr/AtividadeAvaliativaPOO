@@ -5,7 +5,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -147,6 +151,13 @@ final class Tema {
         }
     }
 
+    /** Colunas que guardam dinheiro: aparecem em reais (R$ 1.234,56). */
+    private static final Set<String> DINHEIRO =
+            Set.of("valor_mensalidade", "faturamento_mensal");
+
+    static final NumberFormat MOEDA =
+            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
+
     private static final class Celula extends DefaultTableCellRenderer {
         private static final long serialVersionUID = 1L;
 
@@ -167,6 +178,10 @@ final class Tema {
             }
 
             String nomeColuna = tabela.getColumnName(coluna).toLowerCase();
+            if (DINHEIRO.contains(nomeColuna) && ehNumero(texto)) {
+                setText(MOEDA.format(new BigDecimal(texto.replace(',', '.'))));
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
             if (nomeColuna.equals("situacao") || nomeColuna.equals("status")) {
                 setFont(getFont().deriveFont(Font.BOLD));
                 if (!selecionada) {
