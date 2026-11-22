@@ -37,7 +37,7 @@ public final class AlunosFrame extends JFrame {
         this.repository = repository;
 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1180, 660);
+        setSize(1320, 680);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Tema.FUNDO);

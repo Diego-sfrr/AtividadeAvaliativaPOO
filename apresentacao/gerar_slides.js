@@ -176,14 +176,50 @@ function aPreencher(nome, tituloSlide, topicos) {
 // Guilherme (a preencher)
 // ============================================================
 divisoria('Guilherme', 'guilherme', 'Arquitetura do banco e telas do Coordenador');
-aPreencher('Guilherme', 'Modelagem, DDL e telas do Coordenador', [
-  'MER e modelo lógico (diagrama do Workbench)',
-  'Justificativa da 3FN',
-  'Constraints: PK, FK, UNIQUE e CHECKs (notas de 0 a 10, textos exatos)',
-  'Procedures de cadastro de aluno e massa de dados com os cenários de teste',
-  'Prints das telas do Coordenador: notas, fechar semestre e relatórios',
-  'Dificuldades técnicas e como foram resolvidas',
-]);
+const IMG = (...p) => path.join(__dirname, '..', 'relatorio', 'img', ...p);
+
+// G1. Modelagem e DDL
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Nove tabelas na 3FN, com as regras no próprio DDL', 'guilherme');
+  s.addImage({ path: IMG('eer_sga_fbi.png'), x: 0.4, y: 1.2, w: 5.6, h: 5.6 / 1.513, sizing: { type: 'contain', w: 5.6, h: 3.7 } });
+  const itens = [
+    ['3FN', 'Dados de curso, disciplina e professor ficam nas próprias tabelas. Matrícula é a entidade do N:N aluno × turma.'],
+    ['Constraints', 'PK, FK, UNIQUE e CHECK: notas de 0 a 10 (RN07) e textos com grafia exata (utf8mb4_bin).'],
+    ['Derivados', 'media_final e situacao são recalculadas por trigger, então nunca divergem das notas.'],
+    ['Massa', '20 alunos, 5 turmas e 35 matrículas, com um cenário para cada teste obrigatório.'],
+  ];
+  itens.forEach((it, i) => {
+    const y = 1.2 + i * 0.93;
+    cartao(s, 6.2, y, 3.35, 0.83);
+    texto(s, it[0], 6.35, y + 0.07, 3.1, 0.25, { fontFace: MONO, fontSize: 11, bold: true, color: COR.escuro });
+    texto(s, it[1], 6.35, y + 0.33, 3.1, 0.5, { fontSize: 10.5, color: COR.texto });
+  });
+  texto(s, 'Os dados rodam depois dos triggers: se a massa estiver errada, o banco recusa.',
+    0.5, 4.65, 5.5, 0.4, { fontSize: 12, color: COR.suave });
+  s.addNotes('Diagrama gerado a partir do modelo (relatorio/img/eer_sga_fbi.png). Justificativa completa da 3FN na seção 3 do relatório, com a única redundância deliberada: media_final e situacao.');
+}
+
+// G2. Telas do Coordenador
+{
+  const s = pres.addSlide({ masterName: 'CONTEUDO' });
+  titulo(s, 'Telas do Coordenador: notas, fechamento e relatórios', 'guilherme');
+  const w = 4.4, h = w / 1.75;
+  s.addImage({ path: IMG('telas', '36_coord_notas_apos_exame.png'), x: 0.5, y: 1.2, w, h, sizing: { type: 'contain', w, h } });
+  s.addImage({ path: IMG('telas', '42_coord_rel_faturamento.png'), x: 5.1, y: 1.2, w, h, sizing: { type: 'contain', w, h } });
+  texto(s, 'Notas e exame: o banco recalcula média e situação na hora', 0.5, 1.2 + h + 0.05, w, 0.3, { fontSize: 11, color: COR.suave });
+  texto(s, 'Relatórios: desempenho, lotação e faturamento em reais', 5.1, 1.2 + h + 0.05, w, 0.3, { fontSize: 11, color: COR.suave });
+  const pontos = [
+    'Fechar semestre é tudo ou nada: se faltar uma nota, nada muda e a mensagem aponta o aluno.',
+    'Só procedures e views: nenhum INSERT, UPDATE ou DELETE no Java.',
+    'O Secretário não vê essas telas, e o banco recusa a chamada mesmo assim.',
+  ];
+  s.addText(pontos.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < pontos.length - 1 } })), {
+    x: 0.5, y: 4.0, w: 9, h: 1.1, fontFace: FONTE, fontSize: 13, color: COR.texto, margin: 0, valign: 'top',
+    paraSpaceAfter: 5, isTextBox: true,
+  });
+  s.addNotes('Prints reais da aplicação. Casos de teste das telas na seção 7 do relatório (I15 a I21).');
+}
 
 // ============================================================
 // Diego

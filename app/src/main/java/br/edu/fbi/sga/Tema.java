@@ -134,12 +134,22 @@ final class Tema {
         ajustarColunas(tabela);
     }
 
-    /** No boletim, os identificadores internos só atrapalham a leitura. */
+    /**
+     * Esconde colunas que só atrapalham a leitura: no boletim os identificadores e o
+     * aluno (o cartão de CR já mostra nome e RA); na lista de alunos o ID do curso.
+     * As colunas continuam no modelo, só saem da tela.
+     */
     private static void esconderColunasTecnicas(JTable tabela) {
-        if (indice(tabela, "id_matricula") < 0 || indice(tabela, "disciplina") < 0) {
-            return;
+        if (indice(tabela, "id_matricula") >= 0 && indice(tabela, "disciplina") >= 0) {
+            esconder(tabela, "id_matricula", "id_turma", "id_aluno", "aluno", "ra");
+        } else if (indice(tabela, "id_aluno") >= 0 && indice(tabela, "id_curso") >= 0
+                && indice(tabela, "curso") >= 0) {
+            esconder(tabela, "id_curso");
         }
-        for (String nome : new String[] {"id_matricula", "id_turma", "id_aluno"}) {
+    }
+
+    private static void esconder(JTable tabela, String... nomes) {
+        for (String nome : nomes) {
             int i = indice(tabela, nome);
             if (i >= 0) {
                 tabela.removeColumn(tabela.getColumnModel().getColumn(i));
@@ -170,13 +180,16 @@ final class Tema {
             Map.entry("total_aulas", "Aulas"), Map.entry("frequencia", "Freq. %"),
             Map.entry("situacao", "Situação"), Map.entry("carga_horaria", "Carga horária"),
             Map.entry("data_hora", "Data/hora"), Map.entry("valor_antigo", "Valor antigo"),
-            Map.entry("valor_novo", "Valor novo"));
+            Map.entry("valor_novo", "Valor novo"), Map.entry("usuario", "Usuário"));
 
     /** Troca nomes de coluna do banco (snake_case) por rótulos legíveis. */
     private static void rotular(JTable tabela) {
         for (int c = 0; c < tabela.getColumnCount(); c++) {
             TableColumn coluna = tabela.getColumnModel().getColumn(c);
+            // Fixa o identificador antes de trocar o título: sem isso o JTable usa o
+            // título como identificador e as buscas por nome (getColumn) deixam de achar.
             String nome = String.valueOf(coluna.getIdentifier());
+            coluna.setIdentifier(nome);
             String rotulo = ROTULOS.get(nome);
             if (rotulo == null) {
                 String t = nome.replace('_', ' ');

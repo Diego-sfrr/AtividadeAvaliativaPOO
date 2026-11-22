@@ -592,11 +592,12 @@ public final class DashboardFrame extends JFrame {
                     BorderLayout.NORTH);
 
             if (resumo.size() > 1) {
-                JScrollPane scroll =
-                        new JScrollPane(Tabelas.tabela(resumo));
-                // cabeçalho 38 + 33 por linha + folga, para não cortar nem rolar
-                scroll.setPreferredSize(new Dimension(380,
-                        Math.min(260, 50 + 33 * (resumo.size() - 1))));
+                JTable resumoTabela = Tabelas.tabela(resumo);
+                JScrollPane scroll = new JScrollPane(resumoTabela);
+                // altura real da tabela (cabeçalho + linhas) para não cortar nem rolar
+                int altura = resumoTabela.getPreferredSize().height
+                        + resumoTabela.getTableHeader().getPreferredSize().height + 8;
+                scroll.setPreferredSize(new Dimension(380, Math.min(300, altura)));
                 resultado.add(scroll, BorderLayout.CENTER);
             }
 
